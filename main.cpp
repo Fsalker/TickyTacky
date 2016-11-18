@@ -4,7 +4,7 @@ using namespace std;
 const int BASE = 3; /// "SUPER" CONSTANT - DO NOT MODIFY
 const int BOARD_WIDTH = 3;
 const int BOARD_HEIGHT = 3;
-const int SOLUTION_WIDTH = 3;
+const int SOLUTION_LENGTH = 3;
 int MAX_HASH; /// "SEMI" CONSTANT - needs to be computed before it can be initialised (FIXME?)
 
 struct state
@@ -104,13 +104,15 @@ int point_is_inside_board(int y, int x)
     return 1;
 }
 
-void compute_victory_state(state crtState)
+int compute_victory_state(state crtState)
 {
     /// LEFT / UP-LEFT / UP / UP-RIGHT directions == horizontal / main diagonal / vertical / secondary diagonal directions
     int dir_x[] = {-1, -1, 0, 1};
     int dir_y[] = {0, -1, -1, -1};
     int DP[BOARD_HEIGHT][BOARD_WIDTH][4][2]; /// DP[Y][X][DIR][SYMBOL] = Longest subsequence of SYMBOL (0, 1 or 2 - note: 1=X, 2=O) on point (Y, X) from direction DIR
-    int y,x,dirIndex,symbol, newy,newx;
+    int y,x,dirIndex,symbol;
+    int newy,newx;
+    bool X_WINS=0, O_WINS=0;
 
     /*/// Initialization
     for(y=0; y<BOARD_HEIGHT; ++y)
@@ -147,9 +149,12 @@ void compute_victory_state(state crtState)
                         else DP[y][x][dirIndex][symbol-1] = 0;
                     }
                 }
+                if(DP[y][x][dirIndex][0] == SOLUTION_LENGTH) X_WINS = 1;
+                if(DP[y][x][dirIndex][1] == SOLUTION_LENGTH) O_WINS = 1;
             }
 
     /// Debugging
+    /*for(symbol=1; symbol<=2; ++symbol)
     {
         for(dirIndex=0; dirIndex<4; ++dirIndex)
         {
@@ -161,6 +166,11 @@ void compute_victory_state(state crtState)
             cout<<"\n";
         }
         cout<<"\n";
+    }*/
+    return 1*X_WINS + 2*O_WINS; /// 0 = No one wins
+                                /// 1 = only X wins
+                                /// 2 = only O wins
+                                /// 3 = both X and O win (impossible scenario in an actual game)
 }
 
 void compute_states(int boardLength, int boardHeight, state lastState) /// Top-to-bottom dynamic programming
@@ -169,13 +179,11 @@ void compute_states(int boardLength, int boardHeight, state lastState) /// Top-t
 
     for(int crtStateHash = lastState.stateHash; crtStateHash >= lastState.stateHash; --crtStateHash) // lastState.stateHash
     {
-        crtStateHash = 6721;
         crtState.stateHash = crtStateHash;
         crtState.hash_to_array();
         crtState.print();
 
-        compute_victory_state(crtState);
-        break;
+        cout<<"Victory state = "<<compute_victory_state(crtState)<<"\n";
     }
 }
 
