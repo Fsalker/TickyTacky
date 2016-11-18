@@ -98,7 +98,7 @@ unsigned long long compute_max_hash(int base, int boardLength, int boardHeight)
 
 void compute_victory_state(state crtState)
 {
-
+    //s
 }
 
 void compute_states(int boardLength, int boardHeight, state lastState) /// Top-to-bottom dynamic programming
