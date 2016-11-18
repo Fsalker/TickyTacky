@@ -6,13 +6,14 @@ const int BASE = 3; /// "SUPER" CONSTANT - DO NOT MODIFY
 const int BOARD_LENGTH = 3;
 const int BOARD_HEIGHT = 3;
 const int SOLUTION_LENGTH = 3;
+int MAX_HASH; /// "SEMI" CONSTANT - needs to be computed before it can be initialised (FIXME?)
 
 struct state
 {
     unsigned long long stateHash; /// I'd name this variable 'hash', but it would collide with the already existing 'hash' from <some-kind-of-library.h>
     int stateArray[BOARD_HEIGHT][BOARD_LENGTH]; /// FIXME: Change me into 'char', please (:
 
-    void hash_to_array()
+    void hash_to_array() /// Convert hash into a TicTacToe match
     {
         unsigned long long auxStateHash;
         int rem,x,y,arrIndex;
@@ -29,7 +30,7 @@ struct state
         }
     }
 
-    void print()
+    void print() /// Currently, for debugging
     {
         cout<<"hash = "<<stateHash<<"\n";
         for(int y=0; y<BOARD_HEIGHT; ++y)
@@ -58,6 +59,8 @@ struct state
     }
 };
 
+state GLOBAL_stateArray[MAX_HASH+1]; /// FIXME: I'm evil
+
 void compute_solutions(int arrSol[], int boardLength, int boardHeight, int solutionLength)
 {
     /// LEFT / UP-LEFT / UP / UP-RIGHT directions == horizontal / main diagonal / vertical / secondary diagonal directions
@@ -82,7 +85,7 @@ void compute_solutions(int arrSol[], int boardLength, int boardHeight, int solut
             }
 }
 
-unsigned long long pow(unsigned long long base, int exp)
+unsigned long long pow(unsigned long long base, int exp) /// No need for a quick exponentiation
 {
     if(exp == 0) return 1;
     return base * pow(base, exp-1);
@@ -90,14 +93,19 @@ unsigned long long pow(unsigned long long base, int exp)
 
 unsigned long long compute_max_hash(int base, int boardLength, int boardHeight)
 {
-    return pow(base, boardLength * boardHeight); /// For some reason, this magic math works!
+    return pow(base, boardLength * boardHeight); /// For some unproven reason, it works!
 }
 
-void compute_states(int boardLength, int boardHeight, state lastState)
+void compute_victory_state(state crtState)
+{
+
+}
+
+void compute_states(int boardLength, int boardHeight, state lastState) /// Top-to-bottom dynamic programming
 {
     state crtState;
 
-    for(int crtStateHash=0; crtStateHash<=lastState.stateHash; ++crtStateHash)
+    for(int crtStateHash = lastState.stateHash; crtStateHash >= lastState.stateHash; --crtStateHash) // lastState.stateHash
     {
         crtState.stateHash = crtStateHash;
         crtState.hash_to_array();
@@ -107,8 +115,9 @@ void compute_states(int boardLength, int boardHeight, state lastState)
 
 int main()
 {
+    MAX_HASH = compute_max_hash(BASE, BOARD_LENGTH, BOARD_HEIGHT) - 1;
     state lastState;
-    lastState.stateHash = compute_max_hash(BASE, BOARD_LENGTH, BOARD_HEIGHT) - 1;
+    lastState.stateHash = MAX_HASH;
     lastState.hash_to_array();
     lastState.print();
 
