@@ -10,6 +10,7 @@ int MAX_HASH; /// "SEMI" CONSTANT - needs to be computed before it can be initia
 struct state
 {
     unsigned long long stateHash; /// I'd name this variable 'hash', but it would collide with the already existing 'hash' from <some-kind-of-library.h>
+    int victoryState; /// 0 = draw, 1 = X wins (I win), 2 = O wins (the opponent wins)
     int stateArray[BOARD_HEIGHT][BOARD_WIDTH]; /// FIXME: Change me into 'char', please (:
 
     void hash_to_array() /// Converts hash into a TicTacToe match
@@ -118,7 +119,7 @@ int point_is_inside_board(int y, int x) /// Quite self-explanatory. Checks if th
     return 1;
 }
 
-int compute_victory_state(state crtState)
+int compute_game_state(state crtState)
 {
     /// LEFT / UP-LEFT / UP / UP-RIGHT directions == horizontal / main diagonal / vertical / secondary diagonal directions
     int dir_x[] = {-1, -1, 0, 1};
@@ -186,7 +187,19 @@ void compute_states(int boardLength, int boardHeight, state lastState) /// Top-t
         crtState.hash_to_array();
         crtState.print();
 
-        cout<<"Victory state = "<<compute_victory_state(crtState)<<"\n";
+        for(int y=0; y<BOARD_HEIGHT; ++y)
+            for(int x=0; x<BOARD_WIDTH; ++x)
+                if(crtState.stateArray[y][x] == 0)
+                {
+                    newState = crtState;
+                    newState.stateArray[y][x] = 1;
+                    newState.array_to_hash();
+
+                    int new_victory_state = compute_game_state(newState);
+                    if(new_victory_state == 2) crtState.victoryState = -1;
+                }
+
+        cout<<"Victory state = "<<compute_game_state(crtState)<<"\n";
     }
 }
 
