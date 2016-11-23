@@ -12,7 +12,7 @@ struct state
     unsigned long long stateHash; /// I'd name this variable 'hash', but it would collide with the already existing 'hash' from <some-kind-of-library.h>
     int stateArray[BOARD_HEIGHT][BOARD_WIDTH]; /// FIXME: Change me into 'char', please (:
 
-    void hash_to_array() /// Convert hash into a TicTacToe match
+    void hash_to_array() /// Converts hash into a TicTacToe match
     {
         unsigned long long auxStateHash;
         int rem,x,y,arrIndex;
@@ -20,13 +20,27 @@ struct state
         auxStateHash = stateHash;
         for(arrIndex = 0; arrIndex < BOARD_WIDTH * BOARD_HEIGHT; ++arrIndex)
         {
-            y = arrIndex / BOARD_HEIGHT;
-            x = arrIndex % BOARD_HEIGHT;
+            y = arrIndex / BOARD_WIDTH;
+            x = arrIndex % BOARD_WIDTH;
 
             stateArray[y][x] = auxStateHash % BASE;
 
             auxStateHash /= BASE;
         }
+    }
+
+    void array_to_hash() /// Converts TicTacToe match into a hash
+    {
+        unsigned long long exp = 0;
+        stateHash = 0;
+        for(int y=0; y<BOARD_HEIGHT; ++y)
+            for(int x=0; x<BOARD_WIDTH; ++x)
+            {
+                if(exp==0) exp=1;
+                else exp*=base;
+
+                stateHash += exp * stateArray[y][x];
+            }
     }
 
     void print() /// Currently, for debugging
@@ -60,7 +74,7 @@ struct state
 
 state GLOBAL_stateArray[100000]; /// FIXME: I'm evil
 
-void compute_solutions(int arrSol[], int boardLength, int boardHeight, int solutionLength)
+/*void compute_solutions(int arrSol[], int boardLength, int boardHeight, int solutionLength)
 {
     /// LEFT / UP-LEFT / UP / UP-RIGHT directions == horizontal / main diagonal / vertical / secondary diagonal directions
     int dir_x[] = {-1, -1, 0, 1};
@@ -82,7 +96,7 @@ void compute_solutions(int arrSol[], int boardLength, int boardHeight, int solut
                 }
 
             }
-}
+}*/
 
 unsigned long long pow(unsigned long long base, int exp) /// No need for a quick exponentiation
 {
@@ -95,7 +109,7 @@ unsigned long long compute_max_hash(int base, int boardLength, int boardHeight)
     return pow(base, boardLength * boardHeight); /// For some unproven reason, it works!
 }
 
-int point_is_inside_board(int y, int x)
+int point_is_inside_board(int y, int x) /// Quite self-explanatory. Checks if the point (y, x) exists on the board
 {
     if(y<0) return 0;
     if(y>=BOARD_HEIGHT) return 0;
@@ -114,17 +128,6 @@ int compute_victory_state(state crtState)
     int newy,newx;
     bool X_WINS=0, O_WINS=0;
 
-    /*/// Initialization
-    for(y=0; y<BOARD_HEIGHT; ++y)
-        for(dirIndex=0; dirIndex<4; ++dirIndex)
-            for(symbol=1; symbol<=2; ++symbol)
-                DP[y][0][dirIndex][symbol-1] = (crtState.stateArray[y][0] == symbol); /// Does my current symbol equal to the symbol in the state? Yes = 1, No = 0
-
-    for(x=0; x<BOARD_WIDTH; ++x)
-        for(dirIndex=0; dirIndex<4; ++dirIndex)
-            for(symbol=1; symbol<=2; ++symbol)
-                DP[0][x][dirIndex][symbol-1] = (crtState.stateArray[0][x] == symbol); /// Same as above*/
-
     /// Recursion
     for(y=0; y<BOARD_HEIGHT; ++y)
         for(x=0; x<BOARD_WIDTH; ++x)
@@ -132,7 +135,7 @@ int compute_victory_state(state crtState)
             {
                 newy = y + dir_y[dirIndex];
                 newx = x + dir_x[dirIndex];
-                for(symbol=1; symbol<=2; ++symbol)
+                for(symbol=1; symbol<=2; ++symbol) /// A bit ugly, but it works
                 {
                     if(!point_is_inside_board(newy, newx))
                         DP[y][x][dirIndex][symbol-1] = (crtState.stateArray[y][x] == symbol);
@@ -142,11 +145,11 @@ int compute_victory_state(state crtState)
                         {
                             if(crtState.stateArray[newy][newx] == symbol)
                             {
-                                DP[y][x][dirIndex][symbol-1] = DP[newy][newx][dirIndex][symbol-1] + 1;
+                                DP[y][x][dirIndex][symbol-1] = DP[newy][newx][dirIndex][symbol-1] + 1; /// Continues a preceding subsequence
                             }
-                            else DP[y][x][dirIndex][symbol-1] = 1;
+                            else DP[y][x][dirIndex][symbol-1] = 1; /// Stars a new subsequence
                         }
-                        else DP[y][x][dirIndex][symbol-1] = 0;
+                        else DP[y][x][dirIndex][symbol-1] = 0; /// Stops a currently existing sequence
                     }
                 }
                 if(DP[y][x][dirIndex][0] == SOLUTION_LENGTH) X_WINS = 1;
@@ -175,7 +178,7 @@ int compute_victory_state(state crtState)
 
 void compute_states(int boardLength, int boardHeight, state lastState) /// Top-to-bottom dynamic programming
 {
-    state crtState;
+    state crtState,newState;
 
     for(int crtStateHash = lastState.stateHash; crtStateHash >= lastState.stateHash; --crtStateHash) // lastState.stateHash
     {
@@ -191,7 +194,7 @@ int main()
 {
     MAX_HASH = compute_max_hash(BASE, BOARD_WIDTH, BOARD_HEIGHT) - 1;
     state lastState;
-    lastState.stateHash = MAX_HASH;
+    lastState.stateHash = 19;
     lastState.hash_to_array();
     ///lastState.print();
 
